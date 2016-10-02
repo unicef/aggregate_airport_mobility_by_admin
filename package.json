@@ -1,0 +1,22 @@
+{
+  "name": "aggregate_airport_to_admin",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^3.6.1",
+    "eslint-config-google": "^0.6.0"
+  },
+  "dependencies": {
+    "alasql": "^0.3.2",
+    "argparse": "^1.0.7",
+    "mongodb": "^2.2.10",
+    "mongoose": "^4.6.2",
+    "underscore": "^1.8.3"
+  }
+}
