@@ -1,18 +1,10 @@
 var ArgumentParser = require('argparse').ArgumentParser;
-var prepare_csv = require('./aggregate_airport_to_admin/prepare_csv_for_mongo_import');
-var mongo = require('./aggregate_airport_to_admin/import_to_mongo')
+var aggregate = require('./aggregate_airport_to_admin/aggregate');
+var es = require('./aggregate_airport_to_admin/import_elasticsearch')
+var config = require('./config');
+var csv_columns = config.columns.bookings;
+var db_fields = config.db_fields;
 
-
-var headers = [
-  'origin_iso',
-  'origin_admin',
-  'origin_id',
-  'dest_iso',
-  'dest_admin',
-  'dest_id',
-  'pax',
-  'date'
-];
 // var aggregate = require('./aggregate_airport_to_admin/aggregate_airport_to_admin');
 
 /**
@@ -42,15 +34,15 @@ function main() {
   var file = args.file;
   var kind = args.kind;
 
-  // aggregate.aggregate_mobility_by_admin(file, kind)
-  prepare_csv.create_csvs_for_import(file, headers)
-  .catch(err => { console.log(err);})
+  es.import_to_elastic_search(file, db_fields, csv_columns).then(function() {
+    console.log('DONE with everything!');
+  }).catch(err => { console.log(err);})
   .then(function() {
-    prepare_csv.prepare_csv_for_mongo_import(file)
-    .catch(err => { console.log(err);})
-    .then(function() {
-      mongo.import_to_mongo(file, headers);
-    });
-  });
+  }).then(function() {
+    aggregate.aggregate_admin_to_admin_date().then(function(){
+      console.log("Done aggregating!!!")
+      process.exit();
+    })
+  })
 }
 main();

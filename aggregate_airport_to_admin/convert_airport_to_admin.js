@@ -14,10 +14,10 @@ exports.get_admin = function(airport, admin_level) {
       // Create admin id with country ISO, lowercase admin name, and admin codes.
       // Example: usa-travis-244_44-2754
       var admin_no_space = admin.replace(/\s+/g, '_').toLowerCase();
-      admin_modified = admin_no_space.replace(/'/g, '-').toLowerCase();
+      admin_modified = admin_no_space.replace(/'/g, '_').toLowerCase();
       var admin_id = iso.toLowerCase() +
-      '-' + admin_modified +
-      '-' +
+      '_' + admin_modified +
+      '_' +
       id_0 +
       '_' +
       id_1;
