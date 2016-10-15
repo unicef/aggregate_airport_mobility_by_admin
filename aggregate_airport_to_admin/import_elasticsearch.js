@@ -1,7 +1,6 @@
 
 var admin = require('./convert_airport_to_admin');
 var elasticsearch = require('es');
-var es = elasticsearch();
 var LineByLineReader = require('line-by-line');
 var csv_helper = require('./csv_helper');
 var u = require('underscore');
@@ -9,6 +8,12 @@ var indexes;
 
 var counter = 0;
 var records = [];
+
+var options = {
+  _index: 'mobilities',
+  _type: 'booking'
+};
+var es = elasticsearch(options);
 
 exports.import_to_elastic_search = function(file, db_fields, csv_columns) {
   var lr = new LineByLineReader('./data/' + file);
@@ -33,6 +38,9 @@ exports.import_to_elastic_search = function(file, db_fields, csv_columns) {
         // origin_a2 is origin admin2
         // var origin_a1 = admin.get_admin(origin, 1);
         var origin_a2 = admin.get_admin(origin, 2);
+        if (!origin_a2) {
+          console.log(origin);
+        }
         // var destination_a1 = admin.get_admin(destination, 1);
         var destination_a2 = admin.get_admin(destination, 2);
         var row;
@@ -58,14 +66,19 @@ exports.import_to_elastic_search = function(file, db_fields, csv_columns) {
 
       if (counter % 100000 === 0 & counter > 0) {
         lr.pause();
-        console.log(counter);
+        // console.log(counter);
         bulk_es_insert(records).then(function(err, result) {
           if (err) {
             console.log(err);
           }
           setTimeout(function() {
             records = [];
-            lr.resume();
+
+            es.count(function (err, data) {
+              console.log(counter, data.count)
+              lr.resume();
+            })
+
           }, 1000);
         });
       }
@@ -88,10 +101,6 @@ exports.import_to_elastic_search = function(file, db_fields, csv_columns) {
 
 function bulk_es_insert(records, index) {
   return new Promise(function(resolve, reject) {
-    var options = {
-      _index: 'mobilities',
-      _type: 'booking'
-    };
     es.bulkIndex(options, records, function(err, data) {
       if (err) {
         console.log(err);
