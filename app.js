@@ -1,11 +1,44 @@
 var ArgumentParser = require('argparse').ArgumentParser;
-var aggregate = require('./aggregate_airport_to_admin/aggregate');
-var es = require('./aggregate_airport_to_admin/import_elasticsearch')
+var bluebird = require('bluebird');
+var queue = require('./lib/queue');
 var config = require('./config');
-var csv_columns = config.columns.bookings;
+var csv_columns = config.columns;
 var db_fields = config.db_fields;
-
+var azure = require('./aggregate_airport_to_admin/azure_storage');
 // var aggregate = require('./aggregate_airport_to_admin/aggregate_airport_to_admin');
+
+function aggregate_new_blobs(collection) {
+  return new Promise(function(resolve, reject) {
+    // Get list of blobs in pre aggregation collection
+    // that do not exist in aggregated collection
+    azure.get_blob_names(collection)
+    .catch(function(err) {
+      return reject(err);
+    })
+    .then(function(blobs) {
+      blobs = blobs.filter(function(e) {
+        return e.match(/.gz$/);
+      });
+
+      blobs.forEach(function(blob) {
+        queue.queue.push(
+          {
+            collection: collection,
+            blob: blob,
+            columns: csv_columns,
+            db_fields: db_fields
+          }, function(err) {
+          console.log(err);
+        });
+      });
+      console.log('hi');
+      queue.drain = function() {
+        console.log('all items have been processed');
+        resolve();
+      };
+    });
+  });
+}
 
 /**
  * Main function for when this module is called directly as a script.
@@ -30,19 +63,26 @@ function main() {
     {help: 'Kind of mobility being parsed'}
   );
 
-  var args = parser.parseArgs();
-  var file = args.file;
-  var kind = args.kind;
+  // var args = parser.parseArgs();
+  // var file = args.file;
+  // var kind = args.kind;
 
-  es.import_to_elastic_search(file, db_fields, csv_columns).then(function() {
-    console.log('DONE with everything!');
-  }).catch(err => { console.log(err);})
-  .then(function() {
-  }).then(function() {
-    aggregate.aggregate_admin_to_admin_date().then(function(){
-      console.log("Done aggregating!!!")
-      process.exit();
-    })
-  })
+  azure.get_collection_names()
+  .catch(function(err) { console.log(err);})
+  .then(function(collections) {
+    collections = [collections[4]];
+    // Create a storage container for each collection if it doesn't already exist.
+    azure.create_storage_containers(collections)
+    .then(function() {
+      // Iterate through collections, and aggregate new blobs to collection
+      bluebird.map(collections, function(collection, index) {
+        return aggregate_new_blobs(collection);
+      }, {concurrency: 1})
+      .then(function() {
+        console.log('Done!');
+      });
+    });
+  });
 }
+
 main();

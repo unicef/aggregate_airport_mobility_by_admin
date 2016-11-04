@@ -1,5 +1,5 @@
 var fs = require('fs');
-var dir = 'updated_airports/';
+var dir = '../updated_airports/';
 var files = fs.readdirSync(dir);
 var jsonfile = require('jsonfile');
 
@@ -18,6 +18,7 @@ exports.airport_lookup = function(){
     var id_0;
     var id_1;
     var id_2;
+
     // Airports don't necessarily have both admin 1 and 2 info
     if (airport.properties.admin_2_info || airport.properties.admin_1_info) {
       if (airport.properties.admin_2_info) {

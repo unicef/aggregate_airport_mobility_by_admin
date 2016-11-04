@@ -4,18 +4,18 @@ var elasticsearch = require('es');
 var LineByLineReader = require('line-by-line');
 var csv_helper = require('./csv_helper');
 var u = require('underscore');
-var indexes;
 
-var counter = 0;
-var records = [];
+exports.import_to_elastic_search = function(es_index, kind, file, db_fields, csv_columns) {
 
-var options = {
-  _index: 'mobilities',
-  _type: 'booking'
-};
-var es = elasticsearch(options);
+  var indexes;
+  var counter = 0;
+  var records = [];
 
-exports.import_to_elastic_search = function(file, db_fields, csv_columns) {
+  var options = {
+    _index: es_index,
+    _type: kind
+  };
+  var es = elasticsearch(options);
   var lr = new LineByLineReader('./data/' + file);
   return new Promise(function(resolve, reject) {
     lr.on('error', function(err) {
@@ -28,7 +28,7 @@ exports.import_to_elastic_search = function(file, db_fields, csv_columns) {
       // pause emitting of lines...
       if (counter === 0) {
         indexes = csv_helper.find_indexes_for_columns(data, csv_columns);
-      } else {
+      } else if (counter !== 0 && data.length > 1) {
         var origin = data[indexes.origin];
         var destination = data[indexes.destination];
         var date = data[indexes.date].split(/\s+/)[0];
@@ -65,20 +65,19 @@ exports.import_to_elastic_search = function(file, db_fields, csv_columns) {
       }
 
       if (counter % 100000 === 0 & counter > 0) {
+        console.log(counter);
         lr.pause();
         // console.log(counter);
-        bulk_es_insert(records).then(function(err, result) {
-          if (err) {
-            console.log(err);
-          }
+        bulk_es_insert(es, options, records)
+        .catch(function(err) { return reject(err);})
+        .then(function() {
           setTimeout(function() {
             records = [];
-
-            es.count(function (err, data) {
-              console.log(counter, data.count)
+            // What is this?
+            es.count(function(err, data) {
+              console.log(counter, data.count, '*****');
               lr.resume();
-            })
-
+            });
           }, 1000);
         });
       }
@@ -86,24 +85,24 @@ exports.import_to_elastic_search = function(file, db_fields, csv_columns) {
     });
 
     lr.on('end', function() {
-
       if (records.length > 0) {
-        bulk_es_insert(records).then(function(err, result) {
-          console.log(err)
+        bulk_es_insert(es, options, records)
+        .catch(function(err) { return reject(err); })
+        .then(function() {
           resolve();
         });
       } else {
+        console.log('Done importing',  file);
         resolve();
       }
     });
   });
 };
 
-function bulk_es_insert(records, index) {
+function bulk_es_insert(es, options, records, index) {
   return new Promise(function(resolve, reject) {
     es.bulkIndex(options, records, function(err, data) {
       if (err) {
-        console.log(err);
         return reject(err);
       }
       resolve();

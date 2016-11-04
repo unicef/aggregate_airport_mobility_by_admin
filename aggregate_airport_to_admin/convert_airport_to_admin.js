@@ -16,7 +16,6 @@ exports.get_admin = function(airport, admin_level) {
       var admin_no_space = admin.replace(/\s+/g, '_').toLowerCase();
       admin_modified = admin_no_space.replace(/'/g, '_').toLowerCase();
       var admin_id = iso.toLowerCase() +
-      '_' + admin_modified +
       '_' +
       id_0 +
       '_' +
@@ -25,6 +24,7 @@ exports.get_admin = function(airport, admin_level) {
       if (id_2) {
         admin_id = admin_id + '_' + id_2;
       }
+      admin_id = admin_id + '_' + admin_modified;
       return [iso, admin, admin_id]
     }
   }
