@@ -31,11 +31,6 @@ function aggregate_new_blobs(collection) {
           console.log(err);
         });
       });
-      console.log('hi');
-      queue.drain = function() {
-        console.log('all items have been processed');
-        resolve();
-      };
     });
   });
 }
@@ -78,6 +73,7 @@ function main() {
       bluebird.map(collections, function(collection, index) {
         return aggregate_new_blobs(collection);
       }, {concurrency: 1})
+      .catch(function(err) { console.log(err);})
       .then(function() {
         console.log('Done!');
       });

@@ -4,19 +4,15 @@ var elasticsearch = require('es');
 var LineByLineReader = require('line-by-line');
 var csv_helper = require('./csv_helper');
 var u = require('underscore');
+var config = require('./config');
 
-exports.import_to_elastic_search = function(es_index, kind, file, db_fields, csv_columns) {
 
+function import_to_elastic_search(es, options, file, db_fields, csv_columns) {
   var indexes;
   var counter = 0;
   var records = [];
 
-  var options = {
-    _index: es_index,
-    _type: kind
-  };
-  var es = elasticsearch(options);
-  var lr = new LineByLineReader('./data/' + file);
+  var lr = new LineByLineReader(config.localStorageDir + file);
   return new Promise(function(resolve, reject) {
     lr.on('error', function(err) {
       console.log(err);
@@ -92,12 +88,53 @@ exports.import_to_elastic_search = function(es_index, kind, file, db_fields, csv
           resolve();
         });
       } else {
-        console.log('Done importing',  file);
+        console.log('Done importing', file);
         resolve();
       }
     });
   });
+}
+
+exports.import_to_elastic_search = function(es_index, kind, file, db_fields, csv_columns) {
+  return new Promise(function(resolve, reject) {
+    var options = {
+      _index: es_index,
+      _type: kind
+    };
+    var es = elasticsearch();
+
+    prepare_index(es, options)
+    .catch(function(err) {return reject(err);})
+    .then(function() {
+      es = elasticsearch(options);
+      import_to_elastic_search(es, options, file, db_fields, csv_columns)
+      .catch(function(err) {console.log(err);})
+      .then(function() {resolve();});
+    });
+  });
 };
+
+function prepare_index(es, options) {
+  return new Promise(function(resolve, reject) {
+    es.exists(options, function(err, response) {
+      if (err) {
+        return reject(err);
+      }
+      if (response.exists) {
+        es.indices.deleteIndex(
+          {index: 'mobilities'},
+          function(err, result) {
+            if (err) {
+              return reject(err);
+            }
+            resolve();
+          }
+        );
+      }
+      resolve();
+    });
+  });
+}
 
 function bulk_es_insert(es, options, records, index) {
   return new Promise(function(resolve, reject) {
