@@ -8,6 +8,8 @@ var azure_key_to = config.azure.to.key;
 var blobSvcTo = azure.createBlobService(storage_account_to, azure_key_to);
 var fs = require('fs');
 var utility = require('../lib/utility');
+var local_procesed_dir = config.localProcessedDir;
+
 
 /**
  * Retrieves list of blobs in a collection:
@@ -42,7 +44,7 @@ exports.get_blob_names = function(col) {
           } else {
             var names_to = result.entries.map(entry => entry.name);
             var new_blobs = names_from.filter(function(e) {
-              return names_to.indexOf(e) === -1;
+              return names_to.indexOf(e.replace(/.gz$/, '')) === -1;
             });
             resolve(new_blobs);
           }
@@ -66,6 +68,25 @@ exports.dl_blob = function(collection, blob) {
         .then(function(unzipped_file) {
           resolve(unzipped_file);
         });
+      });
+  });
+};
+
+exports.upload_blob = function(collection, file) {
+  console.log('about to upload ***', collection, file);
+  return new Promise(function(resolve, reject) {
+    blobSvcTo.createBlockBlobFromLocalFile(
+      collection,
+      file,
+      local_procesed_dir + file, function(error, result, response) {
+        if (error) {
+          return reject(error);
+        }
+        // utility.unzip(collection, blob)
+        // .then(function(unzipped_file) {
+        console.log(file, 'uploaded!!')
+        resolve(file);
+        // });
       });
   });
 };
