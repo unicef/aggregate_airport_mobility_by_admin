@@ -1,17 +1,16 @@
 
+// Assigns an admin to a airport.
 var admin = require('./convert_airport_to_admin');
 var elasticsearch = require('es');
 var LineByLineReader = require('line-by-line');
 var csv_helper = require('./csv_helper');
 var u = require('underscore');
-var config = require('./config');
-
+var config = require('../config');
 
 function import_to_elastic_search(es, options, file, db_fields, csv_columns) {
   var indexes;
   var counter = 0;
   var records = [];
-
   var lr = new LineByLineReader(config.localStorageDir + file);
   return new Promise(function(resolve, reject) {
     lr.on('error', function(err) {
@@ -21,13 +20,20 @@ function import_to_elastic_search(es, options, file, db_fields, csv_columns) {
 
     lr.on('line', function(line) {
       var data = line.split('^');
-      // pause emitting of lines...
       if (counter === 0) {
+        // It's the first line...
+        // Get indexes of needed columns
+        // For instance:
+        // { origin: 0, destination: 5, pax: 11, date: 15 }
         indexes = csv_helper.find_indexes_for_columns(data, csv_columns);
       } else if (counter !== 0 && data.length > 1) {
+        // Origin airport
         var origin = data[indexes.origin];
+        // Destination airport
         var destination = data[indexes.destination];
+        // Date of journey
         var date = data[indexes.date].split(/\s+/)[0];
+        // Number of passengers
         var pax = parseInt(data[indexes.pax], 10);
 
         // Get admin names for origin (an airport);
@@ -102,18 +108,23 @@ exports.import_to_elastic_search = function(es_index, kind, file, db_fields, csv
       _type: kind
     };
     var es = elasticsearch();
-
+    // Check if index for this type exists, and then delete if needed
     prepare_index(es, options)
-    .catch(function(err) {return reject(err);})
+    .catch(function(err) {
+      return reject(err);
+    })
     .then(function() {
       es = elasticsearch(options);
       import_to_elastic_search(es, options, file, db_fields, csv_columns)
-      .catch(function(err) {console.log(err);})
+      .catch(function(err) {
+        console.log(err);
+      })
       .then(function() {resolve();});
     });
   });
 };
 
+// Check if index for this type exists, and then delete if needed
 function prepare_index(es, options) {
   return new Promise(function(resolve, reject) {
     es.exists(options, function(err, response) {
@@ -122,7 +133,7 @@ function prepare_index(es, options) {
       }
       if (response.exists) {
         es.indices.deleteIndex(
-          {index: 'mobilities'},
+          {_index: 'mobilities'},
           function(err, result) {
             if (err) {
               return reject(err);
