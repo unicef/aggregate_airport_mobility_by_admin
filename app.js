@@ -9,9 +9,10 @@ var csv_columns = config.columns;
 var db_fields = config.db_fields;
 var azure = require('./aggregate_airport_to_admin/azure_storage');
 var async = require('async');
+var airports = require('./lib/airport_to_admin_lookup');
 // var aggregate = require('./aggregate_airport_to_admin/aggregate_airport_to_admin');
 
-function aggregate_new_blobs(collection) {
+function aggregate_new_blobs(collection, lookup) {
   return new Promise(function(resolve, reject) {
     // Get list of blobs in pre aggregation collection
     // that do not exist in aggregated collection
@@ -29,6 +30,7 @@ function aggregate_new_blobs(collection) {
         console.log(blob);
         queue.queue.push(
           {
+            lookup: lookup,
             collection: collection,
             blob: blob,
             columns: csv_columns,
@@ -47,7 +49,7 @@ function aggregate_new_blobs(collection) {
  * Iterates through file, creating and updating files in designated directory,
  * with total number of bookings.
  */
-function main() {
+function main(lookup) {
   var parser = new ArgumentParser({
     version: '0.0.1',
     addHelp: true,
@@ -81,7 +83,7 @@ function main() {
         console.log(results);
         // Iterate through collections, and aggregate new blobs to collection
         bluebird.map(collections, function(collection, index) {
-          return aggregate_new_blobs(collection);
+          return aggregate_new_blobs(collection, lookup);
         }, {concurrency: 1})
         .catch(function(err) {
           console.log(err);
@@ -122,5 +124,8 @@ function main() {
 //     });
 //   });
 // }
-
-main();
+airports.airport_lookup().catch(function(err) {
+  return reject(err);
+}).then(function(lookup) {
+  main(lookup);
+});

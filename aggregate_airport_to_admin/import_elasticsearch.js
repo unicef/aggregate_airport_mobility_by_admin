@@ -7,7 +7,7 @@ var csv_helper = require('./csv_helper');
 var u = require('underscore');
 var config = require('../config');
 
-function import_to_elastic_search(es, options, file, db_fields, csv_columns) {
+function import_to_elastic_search(es, options, file, db_fields, csv_columns, lookup) {
   var indexes;
   var counter = 0;
   var records = [];
@@ -39,12 +39,12 @@ function import_to_elastic_search(es, options, file, db_fields, csv_columns) {
         // Get admin names for origin (an airport);
         // origin_a2 is origin admin2
         // var origin_a1 = admin.get_admin(origin, 1);
-        var origin_a2 = admin.get_admin(origin, 2);
+        var origin_a2 = admin.get_admin(lookup, origin, 2);
         if (!origin_a2) {
           console.log(origin);
         }
         // var destination_a1 = admin.get_admin(destination, 1);
-        var destination_a2 = admin.get_admin(destination, 2);
+        var destination_a2 = admin.get_admin(lookup, destination, 2);
         var row;
         if (origin_a2 && destination_a2 && pax && date) {
           row = u.flatten([

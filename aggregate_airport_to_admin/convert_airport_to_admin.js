@@ -1,40 +1,38 @@
-var airports = require('./airport_to_admin_lookup');
 
-exports.get_admin = function(airport, admin_level) {
+
+exports.get_admin = function(lookup, airport, admin_level) {
   return new Promise(function(resolve, reject) {
-    airports.airport_lookup().catch(function(err) {
-      return reject(err);
-    }).then(function(lookup) {
-      // var admin = admin_level === 1 ? get_admin_1(airport) : get_admin_2(airport);
-      var admin = lookup[airport];
+    // var admin = admin_level === 1 ? get_admin_1(airport) : get_admin_2(airport);
+    var admin = lookup[airport];
+    console.log(lookup);
+    console.log(admin)
+    process.exit();
+    if (admin) {
+      if (lookup[airport]) {
+        var iso = lookup[airport].iso;
+        // These are admin codes.
+        var id_0 = lookup[airport].id_0;
+        var id_1 = lookup[airport].id_1;
+        var id_2 = lookup[airport].id_2;
 
-      if (admin) {
-        if (lookup[airport]) {
-          var iso = lookup[airport].iso;
-          // These are admin codes.
-          var id_0 = lookup[airport].id_0;
-          var id_1 = lookup[airport].id_1;
-          var id_2 = lookup[airport].id_2;
+        // Create admin id with country ISO, lowercase admin name, and admin codes.
+        // Example: usa-travis-244_44-2754
+        var admin_no_space = admin.replace(/\s+/g, '_').toLowerCase();
+        var admin_modified = admin_no_space.replace(/'/g, '_').toLowerCase();
+        var admin_id = iso.toLowerCase() +
+        '_' +
+        id_0 +
+        '_' +
+        id_1;
 
-          // Create admin id with country ISO, lowercase admin name, and admin codes.
-          // Example: usa-travis-244_44-2754
-          var admin_no_space = admin.replace(/\s+/g, '_').toLowerCase();
-          var admin_modified = admin_no_space.replace(/'/g, '_').toLowerCase();
-          var admin_id = iso.toLowerCase() +
-          '_' +
-          id_0 +
-          '_' +
-          id_1;
-
-          if (id_2) {
-            admin_id = admin_id + '_' + id_2;
-          }
-          admin_id = admin_id + '_' + admin_modified;
-          resolve([iso, admin, admin_id]);
+        if (id_2) {
+          admin_id = admin_id + '_' + id_2;
         }
+        admin_id = admin_id + '_' + admin_modified;
+        resolve([iso, admin, admin_id]);
       }
-      resolve(null);
-    });
+    }
+    resolve(null);
   });
 };
 
