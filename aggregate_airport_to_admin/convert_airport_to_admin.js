@@ -4,9 +4,6 @@ exports.get_admin = function(lookup, airport, admin_level) {
   return new Promise(function(resolve, reject) {
     // var admin = admin_level === 1 ? get_admin_1(airport) : get_admin_2(airport);
     var admin = lookup[airport];
-    console.log(lookup);
-    console.log(admin)
-    process.exit();
     if (admin) {
       if (lookup[airport]) {
         var iso = lookup[airport].iso;
