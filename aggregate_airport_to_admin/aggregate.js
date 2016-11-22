@@ -4,6 +4,7 @@ var client = new elasticsearch.Client({
   log: 'trace'
 });
 var fs = require('fs');
+
 function distinct_origin_ids(es_index, kind) {
   return new Promise(function(resolve, reject) {
     client.search({
@@ -29,8 +30,8 @@ function distinct_origin_ids(es_index, kind) {
   });
 }
 function aggregate_by_destination_and_date(es_index, kind, file_name, origin_id, counter) {
-  console.log(es_index, '44444')
   return new Promise(function(resolve, reject) {
+    // Aggregate by origin -> destination -> date, and sum the pax
     client.search({
       index: es_index,
       type: kind,
@@ -70,7 +71,6 @@ function aggregate_by_destination_and_date(es_index, kind, file_name, origin_id,
           var line = [origin_id, e.key, d.key_as_string, d.pax.value].join('\t') + '\n';
           fs.appendFile('./processed/' + file_name + '.txt', line, function(err) {
             if (err) {
-              console.log('6666', err);
               return reject(err);
             }
           });
@@ -86,6 +86,7 @@ function aggregate_by_destination_and_date(es_index, kind, file_name, origin_id,
 
 exports.aggregate_admin_to_admin_date = function(es_index, kind, file_name) {
   return new Promise(function(resolve, reject) {
+    // Get a unique list of ids of origin admins
     distinct_origin_ids(es_index, kind).then(function(origin_admins) {
       require('bluebird').map(origin_admins.buckets, function(origin_admin, i) {
         return aggregate_by_destination_and_date(es_index, kind, file_name, origin_admin.key, i);
