@@ -1,21 +1,23 @@
 
 
 exports.get_admin = function(lookup, airport, admin_level) {
-  return new Promise(function(resolve, reject) {
     // var admin = admin_level === 1 ? get_admin_1(airport) : get_admin_2(airport);
     var admin = lookup[airport];
     if (admin) {
       if (lookup[airport]) {
-        var iso = lookup[airport].iso;
+        var iso = lookup[airport].ISO;
         // These are admin codes.
-        var id_0 = lookup[airport].id_0;
-        var id_1 = lookup[airport].id_1;
-        var id_2 = lookup[airport].id_2;
+        var id_0 = lookup[airport].ID_0;
+        var id_1 = lookup[airport].ID_1;
+        var id_2 = lookup[airport].ID_2;
 
         // Create admin id with country ISO, lowercase admin name, and admin codes.
         // Example: usa-travis-244_44-2754
-        var admin_no_space = admin.replace(/\s+/g, '_').toLowerCase();
-        var admin_modified = admin_no_space.replace(/'/g, '_').toLowerCase();
+        // Temp hack 
+        var admin_name = admin.NAME_2 || admin.NAME_1 || admin.NAME_0 || admin.NAME_ISO || admin.NOMBRE_MPI;
+
+        var admin_name_no_space = admin_name.replace(/\s+/g, '_').toLowerCase();
+        var admin_name_modified = admin_name_no_space.replace(/'/g, '_').toLowerCase();
         var admin_id = iso.toLowerCase() +
         '_' +
         id_0 +
@@ -25,12 +27,11 @@ exports.get_admin = function(lookup, airport, admin_level) {
         if (id_2) {
           admin_id = admin_id + '_' + id_2;
         }
-        admin_id = admin_id + '_' + admin_modified;
-        resolve([iso, admin, admin_id]);
+        admin_id = admin_id + '_' + admin_name_modified;
+        return[iso, admin, admin_id];
       }
     }
-    resolve(null);
-  });
+    return null;
 };
 
 function get_admin_1(airport) {
