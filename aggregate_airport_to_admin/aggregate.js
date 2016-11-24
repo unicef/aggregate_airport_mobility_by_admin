@@ -21,7 +21,6 @@ function distinct_origin_ids(es_index, kind) {
         }
       }
     }).then(function(resp) {
-      console.log(resp.aggregations);
       resolve(resp.aggregations.origin_ids);
     }, function(err) {
       console.trace(err.message);
@@ -69,7 +68,7 @@ function aggregate_by_destination_and_date(es_index, kind, file_name, origin_id,
         e.date.buckets.forEach(function(d) {
           // console.log(counter, origin_id, e.key, d.key_as_string, d.pax.value);
           var line = [origin_id, e.key, d.key_as_string, d.pax.value].join('\t') + '\n';
-          fs.appendFile('./processed/' + file_name + '.txt', line, function(err) {
+          fs.appendFile('./processed/' + file_name, line, function(err) {
             if (err) {
               return reject(err);
             }
