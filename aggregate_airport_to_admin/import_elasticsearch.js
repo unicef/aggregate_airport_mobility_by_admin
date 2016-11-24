@@ -40,6 +40,7 @@ function import_to_elastic_search(es, options, file, db_fields, csv_columns, loo
         // origin_a2 is origin admin2
         // var origin_a1 = admin.get_admin(origin, 1);
         var origin_a2 = admin.get_admin(lookup, origin, 2);
+
         if (!origin_a2) {
           console.log(origin);
         }
@@ -101,7 +102,7 @@ function import_to_elastic_search(es, options, file, db_fields, csv_columns, loo
   });
 }
 
-exports.import_to_elastic_search = function(es_index, kind, file, db_fields, csv_columns) {
+exports.import_to_elastic_search = function(es_index, kind, file, db_fields, csv_columns, lookup) {
   return new Promise(function(resolve, reject) {
     var options = {
       _index: es_index,
@@ -115,7 +116,7 @@ exports.import_to_elastic_search = function(es_index, kind, file, db_fields, csv
     })
     .then(function() {
       es = elasticsearch(options);
-      import_to_elastic_search(es, options, file, db_fields, csv_columns)
+      import_to_elastic_search(es, options, file, db_fields, csv_columns, lookup)
       .catch(function(err) {
         console.log(err);
       })
