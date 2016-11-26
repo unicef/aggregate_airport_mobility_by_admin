@@ -23,9 +23,8 @@
     "elasticsearch": "^11.0.1",
     "elasticsearch-csv": "0.0.3",
     "es": "^0.5.2",
+    "exec": "^0.2.1",
     "line-by-line": "^0.1.5",
-    "mongodb": "^2.2.10",
-    "mongoose": "^4.6.2",
     "underscore": "^1.8.3"
   }
 }
