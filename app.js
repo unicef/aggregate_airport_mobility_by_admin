@@ -25,7 +25,6 @@ function aggregate_new_blobs(collection, lookup) {
       blobs = blobs.filter(function(e) {
         return e.match(/.gz$/);
       });
-
       blobs.forEach(function(blob) {
         console.log(blob);
         queue.queue.push(
@@ -76,13 +75,12 @@ function main(lookup) {
       });
     },
     function(collections, callback) {
-      collections = [collections[4]];
       // Create a storage container for each collection on azure
       azure.create_storage_containers(collections)
       .then(function(results) {
-        console.log(results);
         // Iterate through collections, and aggregate new blobs to collection
         bluebird.map(collections, function(collection, index) {
+          console.log('Start collection', collection);
           return aggregate_new_blobs(collection, lookup);
         }, {concurrency: 1})
         .catch(function(err) {
@@ -97,7 +95,6 @@ function main(lookup) {
     if (err) {
       console.log(err);
     }
-    console.log(result);
     process.exit();
   });
 }
