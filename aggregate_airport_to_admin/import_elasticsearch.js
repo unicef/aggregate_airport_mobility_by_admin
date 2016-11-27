@@ -6,7 +6,8 @@ var LineByLineReader = require('line-by-line');
 var csv_helper = require('./csv_helper');
 var u = require('underscore');
 var config = require('../config');
-
+var separator = '\t';
+var data;
 function import_to_elastic_search(es, options, file, db_fields, csv_columns, lookup) {
   var indexes;
   var counter = 0;
@@ -17,22 +18,26 @@ function import_to_elastic_search(es, options, file, db_fields, csv_columns, loo
       console.log(err);
          // 'err' contains error object
     });
-
+    console.log('About to read lines!');
     lr.on('line', function(line) {
-      var data = line.split('^');
       if (counter === 0) {
+        if (line.match(/\^/)) {
+          separator = '^';
+	}
+        data = line.split(separator);
         // It's the first line...
         // Get indexes of needed columns
         // For instance:
         // { origin: 0, destination: 5, pax: 11, date: 15 }
         indexes = csv_helper.find_indexes_for_columns(data, csv_columns);
       } else if (counter !== 0 && data.length > 1) {
+        data = line.split(separator);
         // Origin airport
         var origin = data[indexes.origin];
         // Destination airport
         var destination = data[indexes.destination];
         // Date of journey
-        var date = data[indexes.date].split(/\s+/)[0];
+        //var date = data[indexes.date].split(/\s+/)[0];
         // Number of passengers
         var pax = parseInt(data[indexes.pax], 10);
 
@@ -40,19 +45,17 @@ function import_to_elastic_search(es, options, file, db_fields, csv_columns, loo
         // origin_a2 is origin admin2
         // var origin_a1 = admin.get_admin(origin, 1);
         var origin_a2 = admin.get_admin(lookup, origin, 2);
-
         if (!origin_a2) {
           console.log(origin);
         }
         // var destination_a1 = admin.get_admin(destination, 1);
         var destination_a2 = admin.get_admin(lookup, destination, 2);
         var row;
-        if (origin_a2 && destination_a2 && pax && date) {
+        if (origin_a2 && destination_a2 && pax) {
           row = u.flatten([
             origin_a2,
             destination_a2,
-            pax,
-            date
+            pax
           ]);
 
           var json = db_fields.reduce(function(h, e, i) {
@@ -60,14 +63,22 @@ function import_to_elastic_search(es, options, file, db_fields, csv_columns, loo
             return h;
           }, {});
 
+	  var json = {
+            origin_id: origin_a2.admin_id,
+            origin_iso: origin_a2.iso,
+            dest_iso: destination_a2.iso,
+            dest_id: destination_a2.admin_id,
+            pax: pax
+	  }
           // records.push(new Mobility(json));
-          if (json.origin_admin && json.dest_admin) {
+          //if (json.origin_admin && json.dest_admin) {
+          if (json.origin_id && json.dest_id) {
             records.push(json);
           }
         }
       }
 
-      if (counter % 100000 === 0 & counter > 0) {
+      if (counter % 50000 === 0 & counter > 0) {
         console.log(counter);
         lr.pause();
         // console.log(counter);
@@ -90,7 +101,7 @@ function import_to_elastic_search(es, options, file, db_fields, csv_columns, loo
     lr.on('end', function() {
       if (records.length > 0) {
         bulk_es_insert(es, options, records)
-        .catch(function(err) { return reject(err); })
+        .catch(function(err) {console.log('Error', err); return reject(err); })
         .then(function() {
           resolve();
         });
@@ -127,22 +138,29 @@ exports.import_to_elastic_search = function(es_index, kind, file, db_fields, csv
 
 // Check if index for this type exists, and then delete if needed
 function prepare_index(es, options) {
+  console.log('About to prepare index', options);
   return new Promise(function(resolve, reject) {
+    console.log('About to test existence of index', options);
     es.exists(options, function(err, response) {
       if (err) {
+	console.log('Problem checking existence');
         return reject(err);
       }
       if (response.exists) {
+        console.log('Index exists, so delete!');
         es.indices.deleteIndex(
           {_index: 'mobilities'},
           function(err, result) {
             if (err) {
+              console.log(err);
               return reject(err);
             }
+            console.log(result);
             resolve();
           }
         );
       }
+      console.log('No index to delete!');
       resolve();
     });
   });

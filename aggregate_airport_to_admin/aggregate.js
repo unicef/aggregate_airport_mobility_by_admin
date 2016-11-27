@@ -29,6 +29,7 @@ function distinct_origin_ids(es_index, kind) {
   });
 }
 function aggregate_by_destination_and_date(es_index, kind, file_name, origin_id, counter) {
+  console.log('About to agg', file_name, origin_id, counter);
   return new Promise(function(resolve, reject) {
     // Aggregate by origin -> destination -> date, and sum the pax
     client.search({
@@ -46,34 +47,34 @@ function aggregate_by_destination_and_date(es_index, kind, file_name, origin_id,
               field: 'dest_id',
               size: 100000
             },
-            aggs: {
-              date: {
-                terms: {
-                  field: 'date',
-                  size: 100000
-                },
+            //aggs: {
+            //  date: {
+            //    terms: {
+            //      field: 'date',
+            //      size: 100000
+            //    },
                 aggs: {
                   pax: {sum: {field: 'pax'}}
                 }
-              }
-            }
+            //  }
+            //}
           }
         }
       }
     })
-    .catch(function(err) { return reject(err);})
+    .catch(function(err) {return reject(err);})
     .then(function(resp) {
       var buckets = resp.aggregations.dest_ids.buckets;
       buckets.forEach(function(e) {
-        e.date.buckets.forEach(function(d) {
+        //e.date.buckets.forEach(function(d) {
           // console.log(counter, origin_id, e.key, d.key_as_string, d.pax.value);
-          var line = [origin_id, e.key, d.key_as_string, d.pax.value].join('\t') + '\n';
+          var line = [origin_id, e.key, e.key_as_string, e.pax.value].join('\t') + '\n';
           fs.appendFile('./processed/' + file_name, line, function(err) {
             if (err) {
               return reject(err);
             }
           });
-        });
+        //});
       });
       resolve(resp.aggregations);
     }, function(err) {

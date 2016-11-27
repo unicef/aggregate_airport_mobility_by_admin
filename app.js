@@ -14,6 +14,9 @@ var airports = require('./lib/airport_to_admin_lookup');
 
 function aggregate_new_blobs(collection, lookup) {
   return new Promise(function(resolve, reject) {
+    if (collection.match(/search/)) {
+      resolve();
+    };
     // Get list of blobs in pre aggregation collection
     // that do not exist in aggregated collection
     azure.get_blob_names(collection)
@@ -25,7 +28,9 @@ function aggregate_new_blobs(collection, lookup) {
       blobs = blobs.filter(function(e) {
         return e.match(/.gz$/);
       });
-
+      if (blobs.length === 0) {
+	resolve();
+      };
       blobs.forEach(function(blob) {
         console.log(blob);
         queue.queue.push(
@@ -39,6 +44,10 @@ function aggregate_new_blobs(collection, lookup) {
           console.log(err);
         });
       });
+      queue.queue.drain = function() {
+        console.log('all items have been processed');
+        resolve();
+       };
     });
   });
 }
@@ -76,13 +85,12 @@ function main(lookup) {
       });
     },
     function(collections, callback) {
-      collections = [collections[4]];
       // Create a storage container for each collection on azure
       azure.create_storage_containers(collections)
       .then(function(results) {
-        console.log(results);
         // Iterate through collections, and aggregate new blobs to collection
         bluebird.map(collections, function(collection, index) {
+          console.log('Start collection', collection);
           return aggregate_new_blobs(collection, lookup);
         }, {concurrency: 1})
         .catch(function(err) {
@@ -97,33 +105,10 @@ function main(lookup) {
     if (err) {
       console.log(err);
     }
-    console.log(result);
     process.exit();
   });
 }
 
-//   // var args = parser.parseArgs();
-//   // var file = args.file;
-//   // var kind = args.kind;
-//   // Retrieves list of blobs in a collection:
-//   azure.get_collection_names()
-//   .catch(function(err) { console.log(err);})
-//   .then(function(collections) {
-//     collections = [collections[4]];
-//     // Create a storage container for each collection if it doesn't already exist.
-//     azure.create_storage_containers(collections)
-//     .then(function() {
-//       // Iterate through collections, and aggregate new blobs to collection
-//       bluebird.map(collections, function(collection, index) {
-//         return aggregate_new_blobs(collection);
-//       }, {concurrency: 1})
-//       .catch(function(err) { console.log(err);})
-//       .then(function() {
-//         console.log('Done!');
-//       });
-//     });
-//   });
-// }
 airports.airport_lookup().catch(function(err) {
   return reject(err);
 }).then(function(lookup) {
