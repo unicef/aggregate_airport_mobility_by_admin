@@ -45,7 +45,6 @@ function import_to_elastic_search(es, options, file, db_fields, csv_columns, loo
         // origin_a2 is origin admin2
         // var origin_a1 = admin.get_admin(origin, 1);
         var origin_a2 = admin.get_admin(lookup, origin, 2);
-
         if (!origin_a2) {
           console.log(origin);
         }
@@ -64,14 +63,22 @@ function import_to_elastic_search(es, options, file, db_fields, csv_columns, loo
             return h;
           }, {});
 
+	  var json = {
+            origin_id: origin_a2.admin_id,
+            origin_iso: origin_a2.iso,
+            dest_iso: destination_a2.iso,
+            dest_id: destination_a2.admin_id,
+            pax: pax
+	  }
           // records.push(new Mobility(json));
-          if (json.origin_admin && json.dest_admin) {
+          //if (json.origin_admin && json.dest_admin) {
+          if (json.origin_id && json.dest_id) {
             records.push(json);
           }
         }
       }
 
-      if (counter % 100000 === 0 & counter > 0) {
+      if (counter % 50000 === 0 & counter > 0) {
         console.log(counter);
         lr.pause();
         // console.log(counter);
