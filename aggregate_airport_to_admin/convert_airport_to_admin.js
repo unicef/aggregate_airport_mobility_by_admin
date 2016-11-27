@@ -26,7 +26,8 @@ exports.get_admin = function(lookup, airport, admin_level) {
         });
 	admin_id = admin_id + '_' + pub_src.replace(/-/g, '_');
         //admin_id = admin_id + '_' + admin_name_modified.replace(/_+/g, '_');;
-        return [iso, admin, admin_id];
+        //return [iso, admin, admin_id];
+        return {iso: iso, admin_id: admin_id};
       }
     }
     return null;
