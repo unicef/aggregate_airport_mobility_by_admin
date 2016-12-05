@@ -10,7 +10,6 @@ var fs = require('fs');
 var utility = require('../lib/utility');
 var local_procesed_dir = config.localProcessedDir;
 
-
 /**
  * Retrieves list of blobs in a collection:
  * 'booking', 'search', 'schedule'..etc.
