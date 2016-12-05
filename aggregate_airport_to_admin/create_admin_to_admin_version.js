@@ -1,14 +1,14 @@
 
 // Assigns an admin to a airport.
 var admin = require('./convert_airport_to_admin');
-var elasticsearch = require('es');
+var fs = require('fs');
 var LineByLineReader = require('line-by-line');
 var csv_helper = require('./csv_helper');
 var u = require('underscore');
 var config = require('../config');
 var separator = '\t';
 var data;
-function import_to_elastic_search(es, options, file, db_fields, csv_columns, lookup) {
+function create_admin_to_admin_version(kind, file, db_fields, csv_columns, lookup) {
   var indexes;
   var counter = 0;
   var records = [];
@@ -23,7 +23,7 @@ function import_to_elastic_search(es, options, file, db_fields, csv_columns, loo
       if (counter === 0) {
         if (line.match(/\^/)) {
           separator = '^';
-	}
+        }
         data = line.split(separator);
         // It's the first line...
         // Get indexes of needed columns
@@ -37,7 +37,7 @@ function import_to_elastic_search(es, options, file, db_fields, csv_columns, loo
         // Destination airport
         var destination = data[indexes.destination];
         // Date of journey
-        //var date = data[indexes.date].split(/\s+/)[0];
+        // var date = data[indexes.date].split(/\s+/)[0];
         // Number of passengers
         var pax = parseInt(data[indexes.pax], 10);
 
@@ -63,13 +63,13 @@ function import_to_elastic_search(es, options, file, db_fields, csv_columns, loo
             return h;
           }, {});
 
-	  var json = {
+          var json = {
             origin_id: origin_a2.admin_id,
             origin_iso: origin_a2.iso,
             dest_iso: destination_a2.iso,
             dest_id: destination_a2.admin_id,
             pax: pax
-	  }
+          }
           // records.push(new Mobility(json));
           //if (json.origin_admin && json.dest_admin) {
           if (json.origin_id && json.dest_id) {
@@ -79,20 +79,10 @@ function import_to_elastic_search(es, options, file, db_fields, csv_columns, loo
       }
 
       if (counter % 50000 === 0 & counter > 0) {
-        console.log(counter);
-        lr.pause();
-        // console.log(counter);
-        bulk_es_insert(es, options, records)
-        .catch(function(err) { return reject(err);})
-        .then(function() {
-          setTimeout(function() {
-            records = [];
-            // What is this?
-            es.count(function(err, data) {
-              console.log(counter, data.count, '*****');
-              lr.resume();
-            });
-          }, 1000);
+        fs.appendFile('./processed/' + file, records, function(err) {
+          if (err) {
+            console.log(err);
+          }
         });
       }
       counter += 1;
@@ -100,11 +90,7 @@ function import_to_elastic_search(es, options, file, db_fields, csv_columns, loo
 
     lr.on('end', function() {
       if (records.length > 0) {
-        bulk_es_insert(es, options, records)
-        .catch(function(err) {console.log('Error', err); return reject(err); })
-        .then(function() {
-          resolve();
-        });
+
       } else {
         console.log('Done importing', file);
         resolve();
@@ -113,66 +99,17 @@ function import_to_elastic_search(es, options, file, db_fields, csv_columns, loo
   });
 }
 
-exports.import_to_elastic_search = function(es_index, kind, file, db_fields, csv_columns, lookup) {
+exports.create_admin_to_admin_version = function(kind, file, db_fields, csv_columns, lookup) {
   return new Promise(function(resolve, reject) {
-    var options = {
-      _index: es_index,
-      _type: kind
-    };
-    var es = elasticsearch();
-    // Check if index for this type exists, and then delete if needed
-    prepare_index(es, options)
-    .catch(function(err) {
-      return reject(err);
-    })
-    .then(function() {
-      es = elasticsearch(options);
-      import_to_elastic_search(es, options, file, db_fields, csv_columns, lookup)
-      .catch(function(err) {
-        console.log(err);
-      })
-      .then(function() {resolve();});
+    var fs = require('fs');
+    fs.writeFile('./processed/' + file, '', function(err) {
+      if (err) {
+        return console.log(err);
+      }
+      create_admin_to_admin_version(kind, file, db_fields, csv_columns, lookup)
+      .then(function() {
+        resolve();
+      });
     });
   });
 };
-
-// Check if index for this type exists, and then delete if needed
-function prepare_index(es, options) {
-  console.log('About to prepare index', options);
-  return new Promise(function(resolve, reject) {
-    console.log('About to test existence of index', options);
-    es.exists(options, function(err, response) {
-      if (err) {
-	console.log('Problem checking existence');
-        return reject(err);
-      }
-      if (response.exists) {
-        console.log('Index exists, so delete!');
-        es.indices.deleteIndex(
-          {_index: 'mobilities'},
-          function(err, result) {
-            if (err) {
-              console.log(err);
-              return reject(err);
-            }
-            console.log(result);
-            resolve();
-          }
-        );
-      }
-      console.log('No index to delete!');
-      resolve();
-    });
-  });
-}
-
-function bulk_es_insert(es, options, records, index) {
-  return new Promise(function(resolve, reject) {
-    es.bulkIndex(options, records, function(err, data) {
-      if (err) {
-        return reject(err);
-      }
-      resolve();
-    });
-  });
-}

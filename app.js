@@ -29,10 +29,10 @@ function aggregate_new_blobs(collection, lookup) {
         return e.match(/.gz$/);
       });
       if (blobs.length === 0) {
-	resolve();
-      };
+        resolve();
+      }
+
       blobs.forEach(function(blob) {
-        console.log(blob);
         queue.queue.push(
           {
             lookup: lookup,
@@ -110,7 +110,7 @@ function main(lookup) {
 }
 
 airports.airport_lookup().catch(function(err) {
-  return reject(err);
+  console.log(err);
 }).then(function(lookup) {
   main(lookup);
 });
