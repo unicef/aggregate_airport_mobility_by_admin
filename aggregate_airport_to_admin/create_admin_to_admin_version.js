@@ -73,24 +73,26 @@ function create_admin_to_admin_version(kind, file, db_fields, csv_columns, looku
           // records.push(new Mobility(json));
           //if (json.origin_admin && json.dest_admin) {
           if (json.origin_id && json.dest_id) {
-            records.push(json);
+            //records.push(json);
+            records.push([json.origin_iso, json.origin_id, json.dest_iso, json.dest_id, pax].join(','));
           }
         }
       }
 
       if (counter % 50000 === 0 & counter > 0) {
-        fs.appendFile('./processed/' + file, records, function(err) {
-          if (err) {
-            console.log(err);
-          }
-        });
+        lr.pause();
+        append_records_to_file(file, records)
+        .then(function() {
+          lr.resume();
+	});
       }
       counter += 1;
     });
 
     lr.on('end', function() {
       if (records.length > 0) {
-
+        append_records_to_file(file, records)
+        .then(function() { resolve() });
       } else {
         console.log('Done importing', file);
         resolve();
@@ -99,10 +101,20 @@ function create_admin_to_admin_version(kind, file, db_fields, csv_columns, looku
   });
 }
 
+function append_records_to_file(file, records) {
+  return new Promise(function(resolve, reject) {
+    fs.appendFile('./transformed/mobility.csv', records.join('\n'), function(err) {
+      if (err) {
+        console.log(err);
+      }
+      resolve();
+    });
+  });
+}
 exports.create_admin_to_admin_version = function(kind, file, db_fields, csv_columns, lookup) {
   return new Promise(function(resolve, reject) {
     var fs = require('fs');
-    fs.writeFile('./processed/' + file, '', function(err) {
+    fs.writeFile('./transformed/mobility.csv', db_fields + '\n', function(err) {
       if (err) {
         return console.log(err);
       }
