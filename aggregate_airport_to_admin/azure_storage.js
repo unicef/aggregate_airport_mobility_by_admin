@@ -8,7 +8,7 @@ var azure_key_to = config.azure.to.key;
 var blobSvcTo = azure.createBlobService(storage_account_to, azure_key_to);
 var fs = require('fs');
 var utility = require('../lib/utility');
-var local_procesed_dir = config.localProcessedDir;
+var local_dir = config.localStorageDir;
 
 /**
  * Retrieves list of blobs in a collection:
@@ -59,7 +59,7 @@ exports.dl_blob = function(collection, blob) {
     blobSvcFrom.getBlobToStream(
       collection,
       blob,
-      fs.createWriteStream(config.localStorageDir + blob), function(error, result, response) {
+      fs.createWriteStream(config.localZippedDir + blob), function(error, result, response) {
         if (error) {
           return reject(error);
         }
@@ -77,7 +77,7 @@ exports.upload_blob = function(collection, file) {
     blobSvcTo.createBlockBlobFromLocalFile(
       collection,
       file,
-      local_procesed_dir + file, function(error, result, response) {
+      local_dir + file, function(error, result, response) {
         if (error) {
           return reject(error);
         }
