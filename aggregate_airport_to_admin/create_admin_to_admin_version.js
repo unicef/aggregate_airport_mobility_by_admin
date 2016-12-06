@@ -103,7 +103,7 @@ function create_admin_to_admin_version(kind, file, db_fields, csv_columns, looku
 
 function append_records_to_file(file, records) {
   return new Promise(function(resolve, reject) {
-    fs.appendFile('./transformed/mobility.csv', records.join('\n'), function(err) {
+    fs.appendFile('./transformed/' + file, records.join('\n'), function(err) {
       if (err) {
         console.log(err);
       }
@@ -114,7 +114,7 @@ function append_records_to_file(file, records) {
 exports.create_admin_to_admin_version = function(kind, file, db_fields, csv_columns, lookup) {
   return new Promise(function(resolve, reject) {
     var fs = require('fs');
-    fs.writeFile('./transformed/mobility.csv', db_fields + '\n', function(err) {
+    fs.writeFile('./transformed/' + file, db_fields + '\n', function(err) {
       if (err) {
         return console.log(err);
       }
