@@ -8,7 +8,7 @@ var u = require('underscore');
 var config = require('../config');
 var separator = '\t';
 var data;
-function create_admin_to_admin_version(kind, file, db_fields, csv_columns, lookup) {
+function create_admin_to_admin_version(kind, file, db_fields, lookup) {
   var indexes;
   var counter = 0;
   var records = [];
@@ -29,7 +29,7 @@ function create_admin_to_admin_version(kind, file, db_fields, csv_columns, looku
         // Get indexes of needed columns
         // For instance:
         // { origin: 0, destination: 5, pax: 11, date: 15 }
-        indexes = csv_helper.find_indexes_for_columns(data, csv_columns);
+        indexes = csv_helper.find_indexes_for_columns(data);
       } else if (counter !== 0 && data.length > 1) {
         data = line.split(separator);
         // Origin airport
@@ -111,14 +111,14 @@ function append_records_to_file(file, records) {
     });
   });
 }
-exports.create_admin_to_admin_version = function(kind, file, db_fields, csv_columns, lookup) {
+exports.create_admin_to_admin_version = function(kind, file, db_fields, lookup) {
   return new Promise(function(resolve, reject) {
     var fs = require('fs');
     fs.writeFile(config.localTransformedDir  + file, db_fields + '\n', function(err) {
       if (err) {
         return console.log(err);
       }
-      create_admin_to_admin_version(kind, file, db_fields, csv_columns, lookup)
+      create_admin_to_admin_version(kind, file, db_fields, lookup)
       .then(function() {
         resolve();
       });
