@@ -85,7 +85,9 @@ function create_admin_to_admin_version(kind, file, db_fields, lookup) {
       if (counter % 50000 === 0 & counter > 0) {
         lr.pause();
         append_records_to_file(file, records)
-        .then(lr.resume);
+        .then(function() {
+          lr.resume();
+	});
       }
       counter += 1;
     });
@@ -93,7 +95,7 @@ function create_admin_to_admin_version(kind, file, db_fields, lookup) {
     lr.on('end', function() {
       if (records.length > 0) {
         append_records_to_file(file, records)
-        .then(resolve);
+        .then(function() { resolve() });
       } else {
         console.log('Done importing', file);
         resolve();
@@ -103,7 +105,7 @@ function create_admin_to_admin_version(kind, file, db_fields, lookup) {
 }
 
 function append_records_to_file(file, records) {
-  console.log(file, records.slice(0,2));
+console.log(file, records.slice(0,2));
   return new Promise(function(resolve, reject) {
     fs.appendFile(config.localTransformedDir + file, records.join('\n'), function(err) {
       if (err) {
@@ -121,7 +123,9 @@ exports.create_admin_to_admin_version = function(kind, file, db_fields, lookup) 
         return console.log(err);
       }
       create_admin_to_admin_version(kind, file, db_fields, lookup)
-      .then(resolve);
+      .then(function() {
+        resolve();
+      });
     });
   });
 };
