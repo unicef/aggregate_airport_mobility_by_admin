@@ -20,7 +20,9 @@ function aggregate_new_blobs(collection, lookup) {
     // Get list of blobs in pre aggregation collection
     // that do not exist in aggregated collection
     azure.get_blob_names(collection)
-    .catch(reject)
+    .catch(function(err) {
+      return reject(err);
+    })
     // At the moment, only process zipped files.
     .then(function(blobs) {
       blobs = blobs.filter(function(e) {
@@ -77,9 +79,10 @@ function main(lookup) {
     function(callback) {
       // Retrieves list of blobs in a collection: 'booking', 'search', 'schedule'..etc.
       azure.get_collection_names()
-      .catch(console.log)
-      // Passes collections
-      .then(callback.bind(null, null));
+      .catch(function(err) { console.log(err);})
+      .then(function(collections) {
+        callback(null, collections);
+      });
     },
     function(collections, callback) {
       // Create a storage container for each collection on azure
@@ -90,8 +93,12 @@ function main(lookup) {
           console.log('Start collection', collection);
           return aggregate_new_blobs(collection, lookup);
         }, {concurrency: 1})
-        .catch(console.log)
-        .then(callback);
+        .catch(function(err) {
+          console.log(err);
+        })
+        .then(function() {
+          callback();
+        });
       });
     }
   ], function(err, result) {
