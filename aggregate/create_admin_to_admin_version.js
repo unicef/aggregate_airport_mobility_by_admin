@@ -38,6 +38,8 @@ function create_admin_to_admin_version(kind, file, db_fields, lookup) {
         var destination = data[indexes.destination];
         // Date of journey
         // var date = data[indexes.date].split(/\s+/)[0];
+        var year = data[indexes.year];
+        var week = data[indexes.week];
         // Number of passengers
         var pax = parseInt(data[indexes.pax], 10);
 
@@ -58,23 +60,24 @@ function create_admin_to_admin_version(kind, file, db_fields, lookup) {
             pax
           ]);
 
-          var json = db_fields.reduce(function(h, e, i) {
-            h[e] = row[i];
-            return h;
-          }, {});
-
+//          var json = db_fields.reduce(function(h, e, i) {
+//            h[e] = row[i];
+//            return h;
+//          }, {});
           var json = {
             origin_id: origin_a2.admin_id,
             origin_iso: origin_a2.iso,
             dest_iso: destination_a2.iso,
             dest_id: destination_a2.admin_id,
+            year: year,
+            week: week,
             pax: pax
           }
           // records.push(new Mobility(json));
           //if (json.origin_admin && json.dest_admin) {
           if (json.origin_id && json.dest_id) {
             //records.push(json);
-            records.push([json.origin_iso, json.origin_id, json.dest_iso, json.dest_id, pax].join(','));
+            records.push([json.origin_iso, json.origin_id, json.dest_iso, json.dest_id, json.year, json.week, pax].join(','));
           }
         }
       }
@@ -102,6 +105,7 @@ function create_admin_to_admin_version(kind, file, db_fields, lookup) {
 }
 
 function append_records_to_file(file, records) {
+console.log(file, records.slice(0,2));
   return new Promise(function(resolve, reject) {
     fs.appendFile(config.localTransformedDir + file, records.join('\n'), function(err) {
       if (err) {
