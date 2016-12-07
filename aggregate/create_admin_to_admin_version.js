@@ -52,13 +52,13 @@ function create_admin_to_admin_version(kind, file, db_fields, lookup) {
         }
         // var destination_a1 = admin.get_admin(destination, 1);
         var destination_a2 = admin.get_admin(lookup, destination, 2);
-        var row;
+        // var row;
         if (origin_a2 && destination_a2 && pax) {
-          row = u.flatten([
-            origin_a2,
-            destination_a2,
-            pax
-          ]);
+          // row = u.flatten([
+          //   origin_a2,
+          //   destination_a2,
+          //   pax
+          // ]);
 
 //          var json = db_fields.reduce(function(h, e, i) {
 //            h[e] = row[i];
@@ -85,9 +85,7 @@ function create_admin_to_admin_version(kind, file, db_fields, lookup) {
       if (counter % 50000 === 0 & counter > 0) {
         lr.pause();
         append_records_to_file(file, records)
-        .then(function() {
-          lr.resume();
-	});
+        .then(lr.resume);
       }
       counter += 1;
     });
@@ -95,7 +93,7 @@ function create_admin_to_admin_version(kind, file, db_fields, lookup) {
     lr.on('end', function() {
       if (records.length > 0) {
         append_records_to_file(file, records)
-        .then(function() { resolve() });
+        .then(resolve);
       } else {
         console.log('Done importing', file);
         resolve();
@@ -105,7 +103,7 @@ function create_admin_to_admin_version(kind, file, db_fields, lookup) {
 }
 
 function append_records_to_file(file, records) {
-console.log(file, records.slice(0,2));
+  console.log(file, records.slice(0,2));
   return new Promise(function(resolve, reject) {
     fs.appendFile(config.localTransformedDir + file, records.join('\n'), function(err) {
       if (err) {
@@ -123,9 +121,7 @@ exports.create_admin_to_admin_version = function(kind, file, db_fields, lookup) 
         return console.log(err);
       }
       create_admin_to_admin_version(kind, file, db_fields, lookup)
-      .then(function() {
-        resolve();
-      });
+      .then(resolve);
     });
   });
 };
