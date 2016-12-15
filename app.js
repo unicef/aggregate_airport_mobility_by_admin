@@ -79,7 +79,7 @@ function main(lookup) {
     function(callback) {
       // Retrieves list of blobs in a collection: 'booking', 'search', 'schedule'..etc.
       azure.get_collection_names()
-      .catch(function(err) { console.log(err);})
+      .catch(console.log)
       .then(function(collections) {
         callback(null, collections);
       });
