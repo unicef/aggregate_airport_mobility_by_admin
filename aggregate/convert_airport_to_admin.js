@@ -20,7 +20,8 @@ exports.get_admin = function(lookup, airport, admin_level) {
           admin_id = admin_id + '_' + e;
         }
       });
-      admin_id = admin_id + '_' + pub_src.replace(/-/g, '_');
+      //admin_id = admin_id + '_' + pub_src.replace(/-/g, '_');
+      admin_id = admin_id + '_' + pub_src;
       return {iso: iso, admin_id: admin_id};
     }
   }
