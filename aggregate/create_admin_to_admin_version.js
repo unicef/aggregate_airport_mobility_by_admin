@@ -77,7 +77,7 @@ function create_admin_to_admin_version(kind, file, db_fields, lookup) {
           //if (json.origin_admin && json.dest_admin) {
           if (json.origin_id && json.dest_id) {
             //records.push(json);
-            records.push([json.origin_iso, json.origin_id, json.dest_iso, json.dest_id, json.year, json.week, pax].join(','));
+            records.push([json.year, json.week, pax, json.origin_iso, json.origin_id, json.dest_iso, json.dest_id].join(','));
           }
         }
       }
