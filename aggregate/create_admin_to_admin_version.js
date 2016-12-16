@@ -59,7 +59,7 @@ function create_admin_to_admin_version(collection, file, db_fields, lookup) {
           obj.dest_id = destination_a2.admin_id;
 
           if (obj.origin_id && obj.dest_id) {
-            records.push(Object.keys(obj).map(function(e) {
+            records.push(db_fields.map(function(e) {
               return obj[e];
             }).join(','));
           }
@@ -103,7 +103,7 @@ console.log(file, records.slice(0,2));
 exports.create_admin_to_admin_version = function(collection, file, db_fields, lookup) {
   return new Promise(function(resolve, reject) {
     var fs = require('fs');
-    fs.writeFile(config.localTransformedDir  + file, db_fields + '\n', function(err) {
+    fs.writeFile(config.localTransformedDir  + file, db_fields.join(',') + '\n', function(err) {
       if (err) {
         return console.log(err);
       }
