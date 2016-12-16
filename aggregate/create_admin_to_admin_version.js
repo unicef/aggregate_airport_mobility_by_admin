@@ -52,17 +52,16 @@ function create_admin_to_admin_version(collection, file, db_fields, lookup) {
         // var destination_a1 = admin.get_admin(destination, 1);
         var destination_a2 = admin.get_admin(lookup, obj.destination, 2);
         // var row;
-        if (origin_a2 && destination_a2 && pax) {
-
-          obj.origin_id = origin_a2.admin_id,
-          obj.origin_iso = origin_a2.iso,
-          obj.dest_iso = destination_a2.iso,
-          obj.dest_id: destination_a2.admin_id,
+        if (origin_a2 && destination_a2 && obj.pax) {
+          obj.origin_id = origin_a2.admin_id;
+          obj.origin_iso = origin_a2.iso;
+          obj.dest_iso = destination_a2.iso;
+          obj.dest_id = destination_a2.admin_id;
 
           if (obj.origin_id && obj.dest_id) {
-            //records.push(json);
-            // records.push([json.year, json.week, pax, json.origin_iso, json.origin_id, json.dest_iso, json.dest_id].join(','));
-            records.push(Object.keys(obj).map(function(e) { return obj[e] }).join(','));
+            records.push(Object.keys(obj).map(function(e) {
+              return obj[e];
+            }).join(','));
           }
         }
       }
@@ -72,7 +71,7 @@ function create_admin_to_admin_version(collection, file, db_fields, lookup) {
         append_records_to_file(file, records)
         .then(function() {
           lr.resume();
-	});
+        });
       }
       counter += 1;
     });
