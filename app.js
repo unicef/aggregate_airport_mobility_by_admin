@@ -27,7 +27,7 @@ function aggregate_new_blobs(collection, lookup) {
     // At the moment, only process zipped files.
     .then(function(blobs) {
       blobs = blobs.filter(function(e) {
-        return e.match(/.gz$/);
+        return e.match(/.gz$/) && e.match(/W/);
       });
       if (blobs.length === 0) {
         resolve();

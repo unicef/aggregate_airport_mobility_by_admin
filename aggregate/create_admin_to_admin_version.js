@@ -70,6 +70,7 @@ function create_admin_to_admin_version(collection, file, db_fields, lookup) {
         lr.pause();
         append_records_to_file(file, records)
         .then(function() {
+          records = [];
           lr.resume();
         });
       }
