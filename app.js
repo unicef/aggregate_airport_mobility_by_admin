@@ -5,18 +5,19 @@ var ArgumentParser = require('argparse').ArgumentParser;
 var bluebird = require('bluebird');
 var queue = require('./lib/queue');
 var config = require('./config');
-var csv_columns = config.columns;
-var db_fields = config.db_fields;
 var azure = require('./lib/azure_storage');
 var async = require('async');
 var airports = require('./lib/airport_to_admin_lookup');
 // var aggregate = require('./aggregate_airport_to_admin/aggregate_airport_to_admin');
 
 function aggregate_new_blobs(collection, lookup) {
+  var csv_columns = config.columns[collection];
+  var db_fields = config.db_fields[collection];
+
   return new Promise(function(resolve, reject) {
     if (collection.match(/search/)) {
       resolve();
-    };
+    }
     // Get list of blobs in pre aggregation collection
     // that do not exist in aggregated collection
     azure.get_blob_names(collection)
