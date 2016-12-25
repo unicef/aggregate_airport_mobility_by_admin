@@ -8,8 +8,8 @@ val paramsArray = paramsSlice.split(",")
 val arg1 = paramsArray(0)
 val collection = paramsArray(1);
 val statement = if (collection == "traffic") {
-  "select year, week, sum(pax) as cnt, first_value(origin_iso), origin_id, first_value(dest_iso), dest_id from mobils group by origin_id, dest_id, year, week order by cnt" } else {
-   "select date, sum(pax) as cnt, first_value(origin_iso), origin_id, first_value(dest_iso), dest_id from mobils group by origin_id, dest_id, date order by cnt"
+  "select year, week, sum(pax) as cnt, file as file, first_value(origin_iso), origin_id, first_value(dest_iso), dest_id from mobils group by origin_id, dest_id, year, week order by cnt" } else {
+  "select year, week, sum(pax) as cnt, file as file, first_value(origin_iso), origin_id, first_value(dest_iso), dest_id from mobils group by origin_id, dest_id, year, week order by cnt"
 }
 val mobil = sqlContext.read.format("com.databricks.spark.csv").option("header", "true").option("inferSchema", "true").option("delimiter", ",").load("./temp/transformed/" + arg1)
 mobil.registerTempTable("mobils")

@@ -4,6 +4,7 @@ var admin = require('./convert_airport_to_admin');
 var fs = require('fs');
 var LineByLineReader = require('line-by-line');
 var csv_helper = require('../lib/csv_helper');
+var moment = require('moment');
 var u = require('underscore');
 var config = require('../config');
 var separator = '\t';
@@ -57,6 +58,12 @@ function create_admin_to_admin_version(collection, file, db_fields, lookup) {
           obj.origin_iso = origin_a2.iso;
           obj.dest_iso = destination_a2.iso;
           obj.dest_id = destination_a2.admin_id;
+          obj.file = file;
+
+          if (obj.date) {
+            obj.year = moment(obj.date).format('YYYY');
+            obj.week = moment(obj.date).week();
+          }
 
           if (obj.origin_id && obj.dest_id) {
             records.push(db_fields.map(function(e) {
