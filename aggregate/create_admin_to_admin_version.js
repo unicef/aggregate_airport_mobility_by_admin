@@ -58,7 +58,6 @@ function create_admin_to_admin_version(collection, file, db_fields, lookup) {
           obj.origin_iso = origin_a2.iso;
           obj.dest_iso = destination_a2.iso;
           obj.dest_id = destination_a2.admin_id;
-          obj.file = file;
 
           if (obj.date) {
             obj.year = moment(obj.date).format('YYYY');
